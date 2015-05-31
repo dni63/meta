@@ -1,0 +1,85 @@
+#!/bin/bash
+#=============================================================================
+#     FileName: bootstrap
+#         Desc: developer environment bootstrap script
+#       Author: daniel
+#      Version: 1.0
+#   LastChange: 2015-05-31
+#=============================================================================
+
+###########################################################
+# GIT Config
+###########################################################
+echo "Performing GIT Config..."
+
+ROOT_ABSOLUTE="/$( git rev-parse --show-toplevel 2>/dev/null | sed 's/://g' )"
+
+# Use bonam-meta/git/* for .git templates
+git config --replace --global init.templatedir "$ROOT_ABSOLUTE/git"
+
+# No automatic line feed switching!
+git config --replace --system core.autocrlf false
+
+# Allow all Git commands to use colored output, if possible
+git config --replace --global color.ui auto
+
+# Always show a diffstat at the end of a merge
+git config --replace --global merge.stat true
+
+# Set default push command
+git config --replace --global push.default current
+
+# Automatically prune origin with pulls and fetches
+git config --replace --global remote.origin.prune true
+
+# Enable parallel index preload for operations like git diff, status, commit etc.
+git config --replace --global core.preloadindex true
+
+# Msysgit 1.8.5 fscache git-status performance improvement
+git config --replace --global core.fscache true
+
+# When in doubt, it is best to have more information than not. 
+# This includes your Git commit history on your development branches. 
+# To ensure that Git doesn't try to take matters into its own hands with your Git log, it is important to turn off Merge Fast-Forward
+git config --replace --global merge.ff false
+
+# Configure merge and diff tool to use TortoiseGitMerge
+git config --replace --global diff.tool tortoisediff
+git config --replace --global difftool.prompt false 
+git config --replace --global difftool.tortoisediff.cmd "TortoiseGitMerge.exe -mine:\"\$REMOTE\" -base:\"\$LOCAL\""
+git config --replace --global merge.tool tortoisemerge 
+git config --replace --global mergetool.prompt false 
+git config --replace --global mergetool.tortoisemerge.cmd "TortoiseGitMerge.exe -base:\"\$BASE\" -theirs:\"\$REMOTE\" -mine:\"\$LOCAL\" -merged:\"\$MERGED\""
+
+# Subversion-like keywords for Git (only implemented $Revision$)
+git config --replace --global filter.revisionkeyword.clean expand-revision-placeholder
+git config --replace --global filter.revisionkeyword.smudge cat
+
+# Rename limit. Can cause issues with mass changes (i.e. KANA repository/ upgrades) if not set 
+git config --replace --global merge.renameLimit 999999
+
+# Handy git aliases
+git config --replace --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit"
+git config --replace --global alias.ll "log --stat --abbrev-commit"
+git config --replace --global alias.st status
+git config --replace --global alias.ci commit 
+
+# Always rebase with pulls. Note: overwrite this with pull --no-rebase
+#git config --global branch.autosetuprebase always
+
+# Credential Storing
+if [[ -z  "$( git config --get credential.helper )" ]]; then
+    $ROOT_ABSOLUTE/bin/git-credential-winstore.exe -s &>/dev/null
+fi
+
+###########################################################
+# Shell Config
+###########################################################
+echo "Performing Shell Config..."
+cp $ROOT_ABSOLUTE/bash_profile ~/.bash_profile
+echo "export PATH=$ROOT_ABSOLUTE/bin:\$PATH" >> ~/.bash_profile
+
+# Alias
+echo "alias sandbox=\"cd $ROOT_ABSOLUTE/../sandbox\"" >> ~/.bash_profile
+echo "alias workspace=\"cd $ROOT_ABSOLUTE/..\"" >> ~/.bash_profile
+echo "alias meta=\"cd $ROOT_ABSOLUTE/\"" >> ~/.bash_profile
